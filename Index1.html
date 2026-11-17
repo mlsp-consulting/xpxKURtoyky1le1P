@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Finances</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #ffffff;
+      --bg2: #f5f5f3;
+      --bg3: #eeede9;
+      --text: #1a1a18;
+      --text2: #6b6b67;
+      --text3: #a0a09c;
+      --border: rgba(0,0,0,0.1);
+      --border2: rgba(0,0,0,0.18);
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --accent: #2c2c2a;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #1c1c1a;
+        --bg2: #252523;
+        --bg3: #2e2e2b;
+        --text: #f0efe8;
+        --text2: #9a9993;
+        --text3: #666662;
+        --border: rgba(255,255,255,0.1);
+        --border2: rgba(255,255,255,0.18);
+        --accent: #d4d3ca;
+      }
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg3);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 2rem 1rem;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    header {
+      margin-bottom: 2rem;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+    }
+
+    header h1 {
+      font-size: 18px;
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    header p {
+      font-size: 13px;
+      color: var(--text2);
+      margin-top: 2px;
+    }
+
+    .month-nav {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--bg);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 6px 10px;
+    }
+
+    .month-nav button {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text2);
+      font-size: 16px;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+    }
+
+    .month-nav button:hover { background: var(--bg2); }
+
+    .month-display {
+      font-size: 14px;
+      font-weight: 500;
+      min-width: 120px;
+      text-align: center;
+      color: var(--text);
+    }
+
+    .tabs {
+      display: flex;
+      background: var(--bg);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      margin-bottom: 1.5rem;
+    }
+
+    .tab {
+      flex: 1;
+      padding: 10px 12px;
+      font-size: 13px;
+      cursor: pointer;
+      text-align: center;
+      background: transparent;
+      color: var(--text2);
+      border: none;
+      font-family: inherit;
+      transition: background 0.15s;
+    }
+
+    .tab:first-child { border-right: 0.5px solid var(--border); }
+    .tab.active { background: var(--bg2); color: var(--text); font-weight: 500; }
+    .tab:hover:not(.active) { background: var(--bg2); }
+
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    .card {
+      background: var(--bg);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1rem 1.25rem;
+      margin-bottom: 1rem;
+    }
+
+    .card-title {
+      font-size: 12px;
+      color: var(--text2);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 12px;
+    }
+
+    .salaires {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 1rem;
+    }
+
+    .sal-name {
+      font-size: 13px;
+      color: var(--text2);
+      margin-bottom: 6px;
+    }
+
+    .sal-input-wrap {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .sal-input-wrap input {
+      flex: 1;
+      min-width: 0;
+      font-size: 20px;
+      font-weight: 500;
+      border: none;
+      background: transparent;
+      color: var(--text);
+      outline: none;
+      font-family: inherit;
+    }
+
+    .sal-input-wrap input::placeholder { color: var(--text3); font-weight: 400; }
+    .sal-input-wrap span { font-size: 16px; color: var(--text2); }
+    .sal-part { font-size: 12px; color: var(--text3); margin-top: 4px; }
+
+    .charge-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .charge-row:last-child { margin-bottom: 0; }
+
+    .charge-label {
+      font-size: 14px;
+      color: var(--text);
+      flex: 1;
+    }
+
+    .charge-row input {
+      width: 100px;
+      font-size: 14px;
+      font-weight: 500;
+      text-align: right;
+      border: 0.5px solid var(--border2);
+      border-radius: var(--radius-md);
+      background: var(--bg2);
+      color: var(--text);
+      padding: 5px 8px;
+      outline: none;
+      font-family: inherit;
+    }
+
+    .charge-tag {
+      font-size: 11px;
+      color: var(--text3);
+      min-width: 52px;
+      text-align: right;
+    }
+
+    .charge-fixed {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text2);
+      min-width: 60px;
+      text-align: right;
+    }
+
+    .result-section {
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      border: 0.5px solid var(--border);
+      margin-bottom: 1rem;
+      background: var(--bg);
+    }
+
+    .result-header {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .result-person {
+      padding: 0.875rem 1.25rem;
+      border-bottom: 0.5px solid var(--border);
+    }
+
+    .result-person:first-child { border-right: 0.5px solid var(--border); }
+    .result-person .name { font-size: 12px; color: var(--text2); margin-bottom: 2px; }
+    .result-person .total-due { font-size: 22px; font-weight: 500; color: var(--text); }
+    .result-person .breakdown { font-size: 11px; color: var(--text3); margin-top: 3px; line-height: 1.5; }
+
+    .detail-table { width: 100%; border-collapse: collapse; }
+
+    .detail-table th {
+      padding: 6px 1.25rem;
+      font-size: 11px;
+      color: var(--text3);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      background: var(--bg2);
+      font-weight: 400;
+      text-align: right;
+    }
+
+    .detail-table th:first-child { text-align: left; }
+
+    .detail-table td {
+      padding: 8px 1.25rem;
+      font-size: 13px;
+      border-bottom: 0.5px solid var(--border);
+    }
+
+    .detail-table tr:last-child td { border-bottom: none; }
+    .detail-table td:first-child { color: var(--text2); }
+    .detail-table td:nth-child(2), .detail-table td:nth-child(3) { text-align: right; color: var(--text); }
+
+    .virement-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .virement-card {
+      background: var(--bg2);
+      border-radius: var(--radius-lg);
+      padding: 1rem 1.25rem;
+    }
+
+    .virement-name { font-size: 13px; color: var(--text2); margin-bottom: 2px; }
+    .virement-arrow { font-size: 11px; color: var(--text3); margin-bottom: 6px; }
+    .virement-amount { font-size: 22px; font-weight: 500; color: var(--text); }
+
+    .refill-block {
+      background: var(--bg);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1rem 1.25rem;
+      margin-bottom: 1rem;
+    }
+
+    .refill-block-title { font-size: 12px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; }
+
+    .refill-input-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .refill-input-row label { font-size: 14px; color: var(--text); flex: 1; }
+
+    .refill-input-row input {
+      width: 110px;
+      font-size: 16px;
+      font-weight: 500;
+      text-align: right;
+      border: 0.5px solid var(--border2);
+      border-radius: var(--radius-md);
+      background: var(--bg2);
+      color: var(--text);
+      padding: 6px 10px;
+      outline: none;
+      font-family: inherit;
+    }
+
+    .refill-input-row span { font-size: 14px; color: var(--text2); }
+
+    .refill-result {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      padding-top: 12px;
+      border-top: 0.5px solid var(--border);
+    }
+
+    .refill-result-label { font-size: 13px; color: var(--text2); }
+    .refill-result-amount { font-size: 22px; font-weight: 500; color: var(--text); }
+
+    .ratio-wrap { margin-top: 10px; }
+    .ratio-bar { height: 4px; border-radius: 2px; background: var(--bg3); overflow: hidden; }
+    .ratio-bar-fill { height: 100%; background: var(--text3); border-radius: 2px; transition: width 0.3s; }
+    .ratio-labels { display: flex; justify-content: space-between; font-size: 11px; color: var(--text3); margin-top: 4px; }
+
+    .empty-state {
+      text-align: center;
+      padding: 2rem;
+      font-size: 13px;
+      color: var(--text3);
+      background: var(--bg2);
+      border-radius: var(--radius-lg);
+    }
+  </style>
+  <meta name="robots" content="noindex, nofollow, noarchive" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="Finances" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="theme-color" content="#2c2c2a" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <link rel="icon" type="image/png" href="apple-touch-icon.png" />
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <h1>Mathilde &amp; Clément</h1>
+        <p>Finances communes au prorata</p>
+      </div>
+      <div class="month-nav">
+        <button onclick="changeMonth(-1)">&#8249;</button>
+        <span class="month-display" id="monthDisplay"></span>
+        <button onclick="changeMonth(1)">&#8250;</button>
+      </div>
+    </header>
+
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('charges', this)">Charges mensuelles</button>
+      <button class="tab" onclick="switchTab('refill', this)">Refill compte commun</button>
+    </div>
+
+    <!-- ONGLET CHARGES -->
+    <div id="panel-charges" class="panel active">
+      <div class="salaires">
+        <div class="card">
+          <div class="sal-name">Mathilde</div>
+          <div class="sal-input-wrap">
+            <input type="number" id="salM" placeholder="0" min="0" oninput="calc()" />
+            <span>€</span>
+          </div>
+          <div class="sal-part" id="partM">—</div>
+        </div>
+        <div class="card">
+          <div class="sal-name">Clément</div>
+          <div class="sal-input-wrap">
+            <input type="number" id="salC" placeholder="0" min="0" oninput="calc()" />
+            <span>€</span>
+          </div>
+          <div class="sal-part" id="partC">—</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Charges du mois</div>
+        <div class="charge-row">
+          <span class="charge-label">Loyer</span>
+          <input type="number" id="loyer" value="800" min="0" oninput="calc()" />
+          <span class="charge-tag">prorata</span>
+        </div>
+        <div class="charge-row">
+          <span class="charge-label">Électricité</span>
+          <input type="number" id="elec" value="60" min="0" oninput="calc()" />
+          <span class="charge-tag">prorata</span>
+        </div>
+        <div class="charge-row">
+          <span class="charge-label">Courses — Mathilde</span>
+          <span class="charge-fixed">200 €</span>
+        </div>
+        <div class="charge-row">
+          <span class="charge-label">Courses — Clément</span>
+          <span class="charge-fixed">200 €</span>
+        </div>
+      </div>
+
+      <div class="result-section">
+        <div class="result-header">
+          <div class="result-person">
+            <div class="name">Mathilde</div>
+            <div class="total-due" id="totalM">—</div>
+            <div class="breakdown" id="brkM">—</div>
+          </div>
+          <div class="result-person">
+            <div class="name">Clément</div>
+            <div class="total-due" id="totalC">—</div>
+            <div class="breakdown" id="brkC">—</div>
+          </div>
+        </div>
+        <table class="detail-table">
+          <tr>
+            <th>Poste</th>
+            <th>Mathilde</th>
+            <th>Clément</th>
+          </tr>
+          <tr>
+            <td>Loyer (prorata)</td>
+            <td id="loyerM">—</td>
+            <td id="loyerC">—</td>
+          </tr>
+          <tr>
+            <td>Électricité (prorata)</td>
+            <td id="elecM">—</td>
+            <td id="elecC">—</td>
+          </tr>
+          <tr>
+            <td>Courses (fixe)</td>
+            <td>200 €</td>
+            <td>200 €</td>
+          </tr>
+        </table>
+      </div>
+
+      <div class="virement-grid">
+        <div class="virement-card">
+          <div class="virement-name">Mathilde vire</div>
+          <div class="virement-arrow">→ compte commun</div>
+          <div class="virement-amount" id="virM">—</div>
+        </div>
+        <div class="virement-card">
+          <div class="virement-name">Clément vire</div>
+          <div class="virement-arrow">→ compte commun</div>
+          <div class="virement-amount" id="virC">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ONGLET REFILL -->
+    <div id="panel-refill" class="panel">
+      <div id="refill-empty" class="empty-state">
+        Saisis les salaires dans l'onglet "Charges" pour activer le refill.
+      </div>
+
+      <div id="refill-content" style="display:none">
+
+        <div class="refill-block">
+          <div class="refill-block-title">Alimenter le compte commun au prorata</div>
+          <div class="refill-input-row">
+            <label>Mathilde met sur le compte commun</label>
+            <input type="number" id="depInM" placeholder="0" min="0" oninput="calcDepense('M')" />
+            <span>€</span>
+          </div>
+          <div class="refill-result">
+            <span class="refill-result-label">Clément doit mettre</span>
+            <span class="refill-result-amount" id="depOutC">—</span>
+          </div>
+          <div class="refill-result" style="padding-top:8px;border-top:none">
+            <span class="refill-result-label" style="font-size:12px;color:var(--text3)">Total sur le compte commun</span>
+            <span style="font-size:14px;color:var(--text2)" id="depTotM">—</span>
+          </div>
+
+          <div style="height:0.5px;background:var(--border);margin:14px 0"></div>
+
+          <div class="refill-input-row">
+            <label>Clément met sur le compte commun</label>
+            <input type="number" id="depInC" placeholder="0" min="0" oninput="calcDepense('C')" />
+            <span>€</span>
+          </div>
+          <div class="refill-result">
+            <span class="refill-result-label">Mathilde doit mettre</span>
+            <span class="refill-result-amount" id="depOutM">—</span>
+          </div>
+          <div class="refill-result" style="padding-top:8px;border-top:none">
+            <span class="refill-result-label" style="font-size:12px;color:var(--text3)">Total sur le compte commun</span>
+            <span style="font-size:14px;color:var(--text2)" id="depTotC">—</span>
+          </div>
+
+          <div class="ratio-wrap">
+            <div class="ratio-bar"><div class="ratio-bar-fill" id="barDep" style="width:50%"></div></div>
+            <div class="ratio-labels"><span id="lblDepM">Mathilde —</span><span id="lblDepC">Clément —</span></div>
+          </div>
+        </div>
+
+        <div class="refill-block">
+          <div class="refill-block-title">Clément remet de l'argent</div>
+          <div class="refill-input-row">
+            <label>Montant versé par Clément</label>
+            <input type="number" id="refillC" placeholder="0" min="0" oninput="calcRefill()" />
+            <span>€</span>
+          </div>
+          <div class="refill-result">
+            <span class="refill-result-label">Mathilde lui rembourse</span>
+            <span class="refill-result-amount" id="equivM">—</span>
+          </div>
+          <div class="ratio-wrap">
+            <div class="ratio-bar"><div class="ratio-bar-fill" id="barCM" style="width:50%"></div></div>
+            <div class="ratio-labels"><span id="lblM1">Mathilde —</span><span id="lblC1">Clément —</span></div>
+          </div>
+        </div>
+
+        <div class="refill-block">
+          <div class="refill-block-title">Mathilde remet de l'argent</div>
+          <div class="refill-input-row">
+            <label>Montant versé par Mathilde</label>
+            <input type="number" id="refillM" placeholder="0" min="0" oninput="calcRefill()" />
+            <span>€</span>
+          </div>
+          <div class="refill-result">
+            <span class="refill-result-label">Clément lui rembourse</span>
+            <span class="refill-result-amount" id="equivC">—</span>
+          </div>
+          <div class="ratio-wrap">
+            <div class="ratio-bar"><div class="ratio-bar-fill" id="barMC" style="width:50%"></div></div>
+            <div class="ratio-labels"><span id="lblM2">Mathilde —</span><span id="lblC2">Clément —</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const MONTHS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+    let currentMonth = new Date().getMonth();
+    let currentYear = new Date().getFullYear();
+    let ratioM = 0, ratioC = 0;
+
+    function updateMonthDisplay() {
+      document.getElementById('monthDisplay').textContent = MONTHS[currentMonth] + ' ' + currentYear;
+    }
+
+    function changeMonth(dir) {
+      currentMonth += dir;
+      if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+      if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+      updateMonthDisplay();
+      loadData();
+    }
+
+    function switchTab(tab, btn) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('panel-' + tab).classList.add('active');
+    }
+
+    function storageKey(id) {
+      return 'finances_' + currentYear + '_' + currentMonth + '_' + id;
+    }
+
+    function saveData() {
+      ['salM','salC','loyer','elec'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) localStorage.setItem(storageKey(id), el.value);
+      });
+    }
+
+    function loadData() {
+      const defaults = { loyer: '800', elec: '60', salM: '', salC: '' };
+      ['salM','salC','loyer','elec'].forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const val = localStorage.getItem(storageKey(id));
+        el.value = val !== null ? val : (defaults[id] || '');
+      });
+      calc();
+    }
+
+    function fmtDec(n) {
+      return n.toFixed(2).replace('.', ',') + ' €';
+    }
+
+    function calc() {
+      saveData();
+      const sM = parseFloat(document.getElementById('salM').value) || 0;
+      const sC = parseFloat(document.getElementById('salC').value) || 0;
+      const loyer = parseFloat(document.getElementById('loyer').value) || 0;
+      const elec = parseFloat(document.getElementById('elec').value) || 0;
+      const total = sM + sC;
+
+      if (total === 0) {
+        ['partM','partC','totalM','totalC','brkM','brkC','loyerM','loyerC','elecM','elecC','virM','virC'].forEach(id => {
+          const el = document.getElementById(id); if (el) el.textContent = '—';
+        });
+        ratioM = 0; ratioC = 0;
+        document.getElementById('refill-empty').style.display = '';
+        document.getElementById('refill-content').style.display = 'none';
+        return;
+      }
+
+      ratioM = sM / total;
+      ratioC = sC / total;
+      const loyerM = loyer * ratioM, loyerC = loyer * ratioC;
+      const elecM = elec * ratioM, elecC = elec * ratioC;
+      const totalM = loyerM + elecM + 200;
+      const totalC = loyerC + elecC + 200;
+
+      document.getElementById('partM').textContent = (ratioM * 100).toFixed(1) + '% du revenu total';
+      document.getElementById('partC').textContent = (ratioC * 100).toFixed(1) + '% du revenu total';
+      document.getElementById('totalM').textContent = fmtDec(totalM);
+      document.getElementById('totalC').textContent = fmtDec(totalC);
+      document.getElementById('brkM').textContent = 'loyer ' + fmtDec(loyerM) + ' · élec ' + fmtDec(elecM) + ' · courses 200 €';
+      document.getElementById('brkC').textContent = 'loyer ' + fmtDec(loyerC) + ' · élec ' + fmtDec(elecC) + ' · courses 200 €';
+      document.getElementById('loyerM').textContent = fmtDec(loyerM);
+      document.getElementById('loyerC').textContent = fmtDec(loyerC);
+      document.getElementById('elecM').textContent = fmtDec(elecM);
+      document.getElementById('elecC').textContent = fmtDec(elecC);
+      document.getElementById('virM').textContent = fmtDec(totalM);
+      document.getElementById('virC').textContent = fmtDec(totalC);
+
+      document.getElementById('refill-empty').style.display = 'none';
+      document.getElementById('refill-content').style.display = '';
+
+      const pM = (ratioM * 100).toFixed(1) + '%';
+      const pC = (ratioC * 100).toFixed(1) + '%';
+      ['barCM','barMC'].forEach(id => {
+        document.getElementById(id).style.width = (ratioM * 100) + '%';
+      });
+      document.getElementById('barDep').style.width = (ratioM * 100) + '%';
+      document.getElementById('lblDepM').textContent = 'Mathilde ' + pM;
+      document.getElementById('lblDepC').textContent = 'Clément ' + pC;
+      document.getElementById('lblM1').textContent = 'Mathilde ' + pM;
+      document.getElementById('lblC1').textContent = 'Clément ' + pC;
+      document.getElementById('lblM2').textContent = 'Mathilde ' + pM;
+      document.getElementById('lblC2').textContent = 'Clément ' + pC;
+
+      calcRefill();
+      calcDepense();
+    }
+
+    function calcDepense(from) {
+      if (ratioM === 0 || ratioC === 0) return;
+      const inM = parseFloat(document.getElementById('depInM').value) || 0;
+      const inC = parseFloat(document.getElementById('depInC').value) || 0;
+      // Mathilde met X (= ratioM du total) -> total = X / ratioM -> Clément = X * ratioC / ratioM
+      const outC = inM * ratioC / ratioM;
+      const outM = inC * ratioM / ratioC;
+      document.getElementById('depOutC').textContent = inM > 0 ? fmtDec(outC) : '—';
+      document.getElementById('depTotM').textContent = inM > 0 ? fmtDec(inM + outC) : '—';
+      document.getElementById('depOutM').textContent = inC > 0 ? fmtDec(outM) : '—';
+      document.getElementById('depTotC').textContent = inC > 0 ? fmtDec(inC + outM) : '—';
+    }
+
+    function calcRefill() {
+      if (ratioM === 0 || ratioC === 0) return;
+      const rC = parseFloat(document.getElementById('refillC').value) || 0;
+      const rM = parseFloat(document.getElementById('refillM').value) || 0;
+      // Si Clément avance tout (100%), Mathilde lui rembourse sa part (ratioM)
+      document.getElementById('equivM').textContent = rC > 0 ? fmtDec(rC * ratioM) : '—';
+      // Si Mathilde avance tout (100%), Clément lui rembourse sa part (ratioC)
+      document.getElementById('equivC').textContent = rM > 0 ? fmtDec(rM * ratioC) : '—';
+    }
+
+    updateMonthDisplay();
+    loadData();
+  </script>
+</body>
+</html>
